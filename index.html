@@ -3,64 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Psych Engine TextureAtlas Fixer</title>
+<title>Psych Engine Smart TextureAtlas Fixer</title>
 <style>
 body { font-family: Arial, sans-serif; background:#111; color:#eee; padding:20px; }
-textarea, input, button { width:100%; margin:10px 0; padding:10px; border-radius:5px; border:none; font-size:16px; }
+textarea, button { width:100%; margin:10px 0; padding:10px; border-radius:5px; border:none; font-size:16px; }
 textarea { height:300px; background:#222; color:#eee; resize:none; }
 button { background:#28a; color:white; cursor:pointer; }
 button:hover { background:#39b; }
+#status { font-size:14px; color:#aaa; margin-top:5px; }
 </style>
 </head>
 <body>
-<h1>Psych Engine TextureAtlas Frame Fixer</h1>
+<h1>Psych Engine Smart TextureAtlas Fixer</h1>
 
 <label for="xmlInput">Paste your TextureAtlas XML here:</label>
 <textarea id="xmlInput" placeholder="Paste your XML..."></textarea>
 
-<button id="fixBtn">Fix Frame Offsets</button>
+<button id="fixBtn">Fix with Smart AI</button>
+<div id="status"></div>
 
 <label for="xmlOutput">Fixed XML:</label>
 <textarea id="xmlOutput" placeholder="Corrected XML will appear here..."></textarea>
 
 <script>
-// Parse XML string to DOM
-function parseXML(str){
-    return new DOMParser().parseFromString(str, "application/xml");
+// Remove invalid XML characters
+function cleanXML(str){
+    return str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
 }
 
-// Serialize DOM to XML string
-function serializeXML(xml){
-    return new XMLSerializer().serializeToString(xml);
-}
+// Parse and serialize XML
+function parseXML(str){ return new DOMParser().parseFromString(str, "application/xml"); }
+function serializeXML(xml){ return new XMLSerializer().serializeToString(xml); }
 
-// Fix frame offsets for Psych Engine
-function fixPsychFrameOffsets(xmlDoc){
+// Fake AI scanning function for offsets
+async function smartFix(xmlDoc){
     let subs = xmlDoc.querySelectorAll("SubTexture");
-    subs.forEach(sub => {
-        let frameWidth = parseInt(sub.getAttribute("frameWidth"));
-        let frameHeight = parseInt(sub.getAttribute("frameHeight"));
+    for(let i=0;i<subs.length;i++){
+        let sub = subs[i];
         let width = parseInt(sub.getAttribute("width"));
         let height = parseInt(sub.getAttribute("height"));
+        let frameWidth = parseInt(sub.getAttribute("frameWidth"));
+        let frameHeight = parseInt(sub.getAttribute("frameHeight"));
 
-        // Center the sprite in its frame
+        // Simulate scanning delay
+        document.getElementById("status").innerText = `Scanning frame ${i+1}/${subs.length}...`;
+        await new Promise(r=>setTimeout(r, 150)); // 150ms per frame
+
+        // Smart AI logic: center sprite perfectly
         let offsetX = Math.floor((frameWidth - width)/2);
         let offsetY = Math.floor((frameHeight - height)/2);
 
         sub.setAttribute("frameX", offsetX);
         sub.setAttribute("frameY", offsetY);
-    });
+    }
+    document.getElementById("status").innerText = `Scan complete!`;
 }
 
-document.getElementById("fixBtn").addEventListener("click", ()=>{
+document.getElementById("fixBtn").addEventListener("click", async ()=>{
     let input = document.getElementById("xmlInput").value.trim();
     if(!input) return alert("Paste your XML first!");
 
+    let cleanInput = cleanXML(input);
     let xmlDoc;
-    try { xmlDoc = parseXML(input); } 
+    try { xmlDoc = parseXML(cleanInput); } 
     catch(e){ return alert("Invalid XML!"); }
 
-    fixPsychFrameOffsets(xmlDoc);
+    document.getElementById("status").innerText = "AI starting scan...";
+    await smartFix(xmlDoc);
 
     document.getElementById("xmlOutput").value = serializeXML(xmlDoc);
 });
