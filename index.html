@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Psych Engine TextureAtlas Fixer</title>
+<style>
+body { font-family: Arial, sans-serif; background:#111; color:#eee; padding:20px; }
+textarea, input, button { width:100%; margin:10px 0; padding:10px; border-radius:5px; border:none; font-size:16px; }
+textarea { height:300px; background:#222; color:#eee; resize:none; }
+button { background:#28a; color:white; cursor:pointer; }
+button:hover { background:#39b; }
+</style>
+</head>
+<body>
+<h1>Psych Engine TextureAtlas Frame Fixer</h1>
+
+<label for="xmlInput">Paste your TextureAtlas XML here:</label>
+<textarea id="xmlInput" placeholder="Paste your XML..."></textarea>
+
+<button id="fixBtn">Fix Frame Offsets</button>
+
+<label for="xmlOutput">Fixed XML:</label>
+<textarea id="xmlOutput" placeholder="Corrected XML will appear here..."></textarea>
+
+<script>
+// Parse XML string to DOM
+function parseXML(str){
+    return new DOMParser().parseFromString(str, "application/xml");
+}
+
+// Serialize DOM to XML string
+function serializeXML(xml){
+    return new XMLSerializer().serializeToString(xml);
+}
+
+// Fix frame offsets for Psych Engine
+function fixPsychFrameOffsets(xmlDoc){
+    let subs = xmlDoc.querySelectorAll("SubTexture");
+    subs.forEach(sub => {
+        let frameWidth = parseInt(sub.getAttribute("frameWidth"));
+        let frameHeight = parseInt(sub.getAttribute("frameHeight"));
+        let width = parseInt(sub.getAttribute("width"));
+        let height = parseInt(sub.getAttribute("height"));
+
+        // Center the sprite in its frame
+        let offsetX = Math.floor((frameWidth - width)/2);
+        let offsetY = Math.floor((frameHeight - height)/2);
+
+        sub.setAttribute("frameX", offsetX);
+        sub.setAttribute("frameY", offsetY);
+    });
+}
+
+document.getElementById("fixBtn").addEventListener("click", ()=>{
+    let input = document.getElementById("xmlInput").value.trim();
+    if(!input) return alert("Paste your XML first!");
+
+    let xmlDoc;
+    try { xmlDoc = parseXML(input); } 
+    catch(e){ return alert("Invalid XML!"); }
+
+    fixPsychFrameOffsets(xmlDoc);
+
+    document.getElementById("xmlOutput").value = serializeXML(xmlDoc);
+});
+</script>
+</body>
+</html>
